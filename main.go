@@ -12,7 +12,7 @@ import (
 )
 
 func printSlice(slice []string) {
-    log.Printf("Slice length = %d\r\n", len(slice))
+    log.Printf("Number of recovered items = %d\r\n", len(slice))
     for i := 0; i < len(slice); i++ {
         log.Printf("[%d] := %s\r\n", i, slice[i])
     }
