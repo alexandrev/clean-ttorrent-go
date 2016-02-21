@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"code.google.com/p/go.net/html"
+	"golang.org/x/net/html"
 	"time"
 	"strconv"
 	"log"
@@ -67,6 +67,35 @@ func parseTorrent(slice *[]string,n *html.Node) {
 	
 }
 
+func getBaseURL(initialBaseURL string) string {
+    baseURL:= initialBaseURL;
+    found := false;
+    idx := 0;    
+    factor := 1;
+    initialLastIPFragment := strings.LastIndex(baseURL,".");
+    endLastIPFragment := strings.LastIndex(baseURL,":");
+    baseURLFragment := baseURL[0:initialLastIPFragment];
+    lastIPFragment := baseURL[initialLastIPFragment+1:endLastIPFragment];
+    port, _:= strconv.Atoi(lastIPFragment);
+    
+    
+    for( !found ) {
+        portString  := strconv.Itoa(port);
+        baseURL = baseURLFragment + "." + portString + ":1080";
+        log.Printf("Trying to reach tTorrent at the IP: %s", baseURL)
+        _, err := http.Get(baseURL +"/torrents")
+        if err == nil {
+            found = true;
+        }
+        idx = idx + 1;
+        port = port + idx*factor;
+        factor = factor * (-1);        
+    }
+    log.Printf("Final value: %s", baseURL)
+    return baseURL;
+        
+}
+
 func main(){
 	fmt.Println(len(os.Args), os.Args)
 	var slice []string
@@ -77,7 +106,10 @@ func main(){
 		log.Printf("Refresh Rate: %d secs.",sleepTime);
 		exit := true;
 		
+        baseURL = getBaseURL(baseURL);
+        
 		for(exit == true){
+            slice = slice[:0]
 			log.Printf("New attept to clean the downloaded items");
 			res, err := http.Get(baseURL+"/torrents")
 			if err != nil {
